@@ -30,15 +30,14 @@ class Fractal:
             for i in range(middle, side, step):
                 for j in range(middle, side, step):
                     # Calcul de la moyenne des quatres coins du carré
-                    if i + middle < side and j + middle < side:
+                    if i + middle < side and j + middle < side: # normalement pas besoin
                         mean = (m[i - middle][j - middle] +
                                 m[i - middle][j + middle] +
                                 m[i + middle][j - middle] +
                                 m[i + middle][j + middle]) / 4
                         # On met a jour le point central
                         m[i][j] = (mean +
-                                   rd.randint(-middle * random_factor,
-                                              middle * random_factor) +
+                                   (rd.random()*2-1.) * middle * random_factor +
                                    rd.uniform(-step * diversity_factor,
                                               step * diversity_factor))
             # Phase carré
@@ -63,7 +62,7 @@ class Fractal:
                         s += m[i][j + middle]
                         number_of_corners += 1
                     m[i][j] = (s / number_of_corners +
-                               rd.randint(-middle, middle))
+                               (rd.random()*2-1) * middle)
             step = middle
         # Normalisation des valeurs
         min_value = m.min()
@@ -110,6 +109,12 @@ class PerlinNoise:
     def scalar(x, y):
         return x[0] * y[0] + x[1] * y[1]
 
+    @staticmethod
+    def smoth_function(x, y, w):
+        # return 3 * x * x - 2 * x * x * x
+        # return 1 / (1 + np.exp(-x))
+        return (1 - w) * x + w * y
+
     def val(self, x, y):
         x, y = x / self.smoothness, y / self.smoothness
         x0, y0 = int(x), int(y)
@@ -127,12 +132,8 @@ class PerlinNoise:
         t = self.scalar(vect2, (x - x0 - 1, y - y0))
         u = self.scalar(vect3, (x - x0 - 1, y - y0 - 1))
         v = self.scalar(vect4, (x - x0, y - y0 - 1))
-        part_frac_x = (x - x0)
-        part_frac_y = (y - y0)
-        Cx = (3 * part_frac_x * part_frac_x -
-              2 * part_frac_x * part_frac_x * part_frac_x)
-        Cy = (3 * part_frac_y * part_frac_y -
-              2 * part_frac_y * part_frac_y * part_frac_y)
-        stLisse = s + Cx * (t - s)
-        uvLisse = u + Cx * (v - u)
-        return stLisse + Cy * (uvLisse - stLisse)
+        part_frac_x = x - x0
+        part_frac_y = y - y0
+        ix0 = self.smoth_function(s, t, part_frac_x)
+        ix1 = self.smoth_function(u, v, part_frac_x)
+        return self.smoth_function(ix0, ix1, part_frac_y)
