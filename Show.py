@@ -31,8 +31,8 @@ def show(the_map):
         glRotated(30, 1, 0, 0)
         glRotated(angle, 0, 1, 0)
         
-        glTranslatef(-0.5, 0, -0.5)
-        glScalef(1/the_map.side, 1, 1/the_map.side)
+        glTranslatef(-1, 0, -1)
+        glScalef(2/the_map.side, 1, 2/the_map.side)
         glColor3f(0.1, 0.9, 0.1)
         glBegin(GL_QUADS)
         for i in range(the_map.side-1):
