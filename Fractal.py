@@ -30,15 +30,14 @@ class Fractal:
             for i in range(middle, side, step):
                 for j in range(middle, side, step):
                     # Calcul de la moyenne des quatres coins du carré
-                    if i + middle < side and j + middle < side:
+                    if i + middle < side and j + middle < side: # normalement pas besoin
                         mean = (m[i - middle][j - middle] +
                                 m[i - middle][j + middle] +
                                 m[i + middle][j - middle] +
                                 m[i + middle][j + middle]) / 4
                         # On met a jour le point central
                         m[i][j] = (mean +
-                                   rd.randint(-middle * random_factor,
-                                              middle * random_factor) +
+                                   (rd.random()*2-1.) * middle * random_factor +
                                    rd.uniform(-step * diversity_factor,
                                               step * diversity_factor))
             # Phase carré
@@ -63,7 +62,7 @@ class Fractal:
                         s += m[i][j + middle]
                         number_of_corners += 1
                     m[i][j] = (s / number_of_corners +
-                               rd.randint(-middle, middle))
+                               (rd.random()*2-1) * middle)
             step = middle
         # Normalisation des valeurs
         min_value = m.min()
