@@ -79,6 +79,25 @@ class Fractal:
         return m
 
     @staticmethod
+    def perlin_combined(side):
+        noise1 = PerlinNoise(smoothness=side)
+        permutation = noise1.permutation
+        noise2 = PerlinNoise(smoothness=(side//2), permutation=permutation)
+        noise3 = PerlinNoise(smoothness=5, permutation=permutation)
+        noise4 = PerlinNoise(smoothness=2, permutation=permutation)
+        noise5 = PerlinNoise(smoothness=1.1, permutation=permutation)
+        m = np.array([[0.5 * noise1.val(i, j) +
+                       0.5 * noise2.val(i, j) +
+                       0.125 * noise3.val(i, j) +
+                       0.0625 * noise4.val(i, j) +
+                       0.0013 * noise5.val(i, j)
+                       for i in range(side)]
+                      for j in range(side)])
+        m -= m.min()
+        m = m / m.max()
+        return m
+
+    @staticmethod
     def alea(side):
         return [[rd.random() for i in range(side)] for j in range(side)]
 
@@ -97,7 +116,7 @@ class PerlinNoise:
         else:
             self.permutation = permutation
         # Pour avoir deux fois la permutation
-        self.permutation = np.concatenate((self.permutation, self.permutation))
+        self.perm = np.concatenate((self.permutation, self.permutation))
         unit_bisector = sqrt(2) / 2
         self.gradients = [(1, 0), (0, 1), (-1, 0), (0, -1),
                           (unit_bisector, unit_bisector),
@@ -120,10 +139,10 @@ class PerlinNoise:
         x0, y0 = int(x), int(y)
         i = x0 % 256
         j = y0 % 256
-        grad1 = self.permutation[i + self.permutation[j]] % 8
-        grad2 = self.permutation[i + 1 + self.permutation[j]] % 8
-        grad3 = self.permutation[i + self.permutation[j + 1]] % 8
-        grad4 = self.permutation[i + 1 + self.permutation[j + 1]] % 8
+        grad1 = self.perm[i + self.perm[j]] % 8
+        grad2 = self.perm[i + 1 + self.perm[j]] % 8
+        grad3 = self.perm[i + self.perm[j + 1]] % 8
+        grad4 = self.perm[i + 1 + self.perm[j + 1]] % 8
         vect1 = [self.gradients[grad1][0], self.gradients[grad1][1]]
         vect2 = [self.gradients[grad2][0], self.gradients[grad2][1]]
         vect3 = [self.gradients[grad3][0], self.gradients[grad3][1]]

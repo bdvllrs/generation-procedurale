@@ -43,3 +43,5 @@ class Map:
             self.map = Fractal.alea(self.side)
         elif method == 'perlin':
             self.map = Fractal.perlin_noise(self.side, smoothness=smoothness)
+        elif method == 'perlin_combined':
+            self.map = Fractal.perlin_combined(self.side)
