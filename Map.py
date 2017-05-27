@@ -13,23 +13,23 @@ class Map:
         self.map = None
         self.side = side
 
-    def leoad_map(self, m):
+    def load_map(self, m):
         """
         Charge une carte
         :param map: si map est un string, utilise pickle pour charger
         le fichier, si c'est un tableau, directement utilisé
         """
         if isinstance(m, str):
-            self.map = pickle.load(open(m, 'rb'))
+            self.map, self.side = pickle.load(open(m, 'rb'))
         elif isinstance(m, list):
-            self.map = m
+            self.map, self.side = m, len(m)
 
     def save_map(self, filename):
         """
         Sauvegarde la carte dans un fichier
         :param filename: nom du fichier
         """
-        pickle.dump(self.map, open(filename, 'ab'))
+        pickle.dump((self.map, self.side), open(filename, 'ab'))
 
     def generate_map(self, method='diamond-square', random_factor=1,
                      diversity_factor=0):
