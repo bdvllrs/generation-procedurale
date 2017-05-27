@@ -5,6 +5,19 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+def colorize(value, keys):
+    start, end = 0, 1
+    for k in keys:
+        if start < k <= value:
+            start = k
+        elif value < k <= end:
+            end = k
+    Rs, Gs, Bs, As = keys[start]
+    Re, Ge, Be, Ae = keys[end]
+    pe = (value-start)/(end-start)
+    ps = 1-pe
+    return [Rs*ps+Re*pe, Gs*ps+Ge*pe, Bs*ps+Be*pe, As*ps+Ae*pe]
+
 def show(the_map):
     # Initialisation
     pygame.init()
@@ -18,19 +31,28 @@ def show(the_map):
     gluPerspective(45, 1, 0.1, 50.0)
     
     glMatrixMode(GL_MODELVIEW)
-    glMaterialiv(GL_FRONT_AND_BACK,GL_SPECULAR,[1, 1, 1, 1])
-    glMateriali(GL_FRONT_AND_BACK,GL_SHININESS,100)
+    glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,10.0)
     glLightiv(GL_LIGHT0,GL_POSITION,[2, 5, 2, 1])
     glLoadIdentity()
 
-    # Crée la display list
+    # Echelle de couleurs
+    palette = {0   : [0.2, 0.2, 0.2, 1],
+               0.2 : [0.2, 0.2, 0.2, 1],
+               0.3 : [0.2, 0.5, 0.2, 1],
+               0.75: [0.5, 0.5, 0.5, 1],
+               1   : [0.8, 0.8, 0.8, 1]}
 
+    # Crée la display list
     index = glGenLists(1)
     glNewList(index, GL_COMPILE)
     
     glBegin(GL_TRIANGLES)
     for i in range(the_map.side-1):
         for j in range(the_map.side-1):
+            mean = (the_map.map[i][j]+the_map.map[i+1][j]+the_map.map[i][j+1]+the_map.map[i+1][j+1])/4
+            color = colorize(mean, palette)
+            glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,color)
+            glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,color)
             v1 = the_map.map[i][j] - the_map.map[i+1][j]     # on x
             v2 = the_map.map[i+1][j] - the_map.map[i+1][j+1] # on y
             n = v1**2 + v2**2 + 1
@@ -50,6 +72,19 @@ def show(the_map):
             glVertex3f(i+1, the_map.map[i+1][j+1], j+1)
             glVertex3f(i  , the_map.map[i][j+1]  , j+1)
             glVertex3f(i  , the_map.map[i][j]    , j)
+    glEnd()
+    glBegin(GL_QUADS)
+    glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,[0.2, 0.2, 0.8, 0.5])
+    glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,[0.2, 0.2, 0.8, 0.5])
+    glNormal3f(0, 1, 0)
+    for i in range(the_map.side-1):
+        for j in range(the_map.side-1):
+            mean = (the_map.map[i][j]+the_map.map[i+1][j]+the_map.map[i][j+1]+the_map.map[i+1][j+1])/4
+            if(mean <= 0.25):
+                glVertex3f(i, 0.25, j)
+                glVertex3f(i+1, 0.25, j)
+                glVertex3f(i+1, 0.25, j+1)
+                glVertex3f(i, 0.25, j+1)
     glEnd()
     glEndList()
 
