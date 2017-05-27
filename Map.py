@@ -32,7 +32,7 @@ class Map:
         pickle.dump((self.map, self.side), open(filename, 'ab'))
 
     def generate_map(self, method='diamond-square', random_factor=1,
-                     diversity_factor=0):
+                     diversity_factor=0, smoothness=5):
         """
         Génère une carte avec l'algo du diamant-carré
         """
@@ -41,3 +41,5 @@ class Map:
                                               diversity_factor)
         elif method == 'alea':
             self.map = Fractal.alea(self.side)
+        elif method == 'perlin':
+            self.map = Fractal.perlin_noise(self.side, smoothness=smoothness)

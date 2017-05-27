@@ -73,8 +73,11 @@ class Fractal:
         return m
 
     @staticmethod
-    def perlin_noise(size):
-        pass
+    def perlin_noise(side, smoothness=5):
+        noise = PerlinNoise(smoothness=smoothness)
+        m = np.array([[noise.val(i, j) for i in range(side)]
+                      for j in range(side)])
+        return m
 
     @staticmethod
     def alea(side):
@@ -82,11 +85,54 @@ class Fractal:
 
 
 class PerlinNoise:
-    def __init__(self, size=256):
-        self.permutation = np.random.permutation(256)
+    """
+    Create a new Perlin Noise fractal
+    :param size: the size of the permutation (default 256)
+    :param permutation: if given uses this permutation
+    """
+
+    def __init__(self, smoothness=5, size=256, permutation=None):
+        self.smoothness = smoothness
+        if permutation is None:
+            self.permutation = np.random.permutation(256)
+        else:
+            self.permutation = permutation
+        # Pour avoir deux fois la permutation
+        self.permutation = np.concatenate((self.permutation, self.permutation))
         unit_bisector = sqrt(2) / 2
-        self.gradient = [(1, 0), (0, 1), (-1, 0), (0, -1),
-                         (unit_bisector, unit_bisector),
-                         (unit_bisector, -unit_bisector)
-                         (-unit_bisector, unit_bisector),
-                         (-unit_bisector, -unit_bisector)]
+        self.gradients = [(1, 0), (0, 1), (-1, 0), (0, -1),
+                          (unit_bisector, unit_bisector),
+                          (unit_bisector, -unit_bisector),
+                          (-unit_bisector, unit_bisector),
+                          (-unit_bisector, -unit_bisector)]
+
+    @staticmethod
+    def scalar(x, y):
+        return x[0] * y[0] + x[1] * y[1]
+
+    def val(self, x, y):
+        x, y = x / self.smoothness, y / self.smoothness
+        x0, y0 = int(x), int(y)
+        i = x0 % 256
+        j = y0 % 256
+        grad1 = self.permutation[i + self.permutation[j]] % 8
+        grad2 = self.permutation[i + 1 + self.permutation[j]] % 8
+        grad3 = self.permutation[i + self.permutation[j + 1]] % 8
+        grad4 = self.permutation[i + 1 + self.permutation[j + 1]] % 8
+        vect1 = [self.gradients[grad1][0], self.gradients[grad1][1]]
+        vect2 = [self.gradients[grad2][0], self.gradients[grad2][1]]
+        vect3 = [self.gradients[grad3][0], self.gradients[grad3][1]]
+        vect4 = [self.gradients[grad4][0], self.gradients[grad4][1]]
+        s = self.scalar(vect1, (x - x0, y - y0))
+        t = self.scalar(vect2, (x - x0 - 1, y - y0))
+        u = self.scalar(vect3, (x - x0 - 1, y - y0 - 1))
+        v = self.scalar(vect4, (x - x0, y - y0 - 1))
+        part_frac_x = (x - x0)
+        part_frac_y = (y - y0)
+        Cx = (3 * part_frac_x * part_frac_x -
+              2 * part_frac_x * part_frac_x * part_frac_x)
+        Cy = (3 * part_frac_y * part_frac_y -
+              2 * part_frac_y * part_frac_y * part_frac_y)
+        stLisse = s + Cx * (t - s)
+        uvLisse = u + Cx * (v - u)
+        return stLisse + Cy * (uvLisse - stLisse)
