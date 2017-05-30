@@ -32,7 +32,7 @@ class Map:
         pickle.dump((self.map, self.side), open(filename, 'ab'))
 
     def generate_map(self, method='diamond-square', seed=None, random_factor=1,
-                     diversity_factor=0, smoothness=5):
+                     diversity_factor=0, smoothness=1):
         """
         Génère une carte avec l'algo du diamant-carré
         """

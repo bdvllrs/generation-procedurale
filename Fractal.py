@@ -141,6 +141,8 @@ class PerlinNoise:
     def val(self, x, y):
         x, y = x / self.smoothness, y / self.smoothness
         x0, y0 = int(x), int(y)
+        if(x == x0 and y == y0):
+            x = x + 0.01
         i = x0
         j = y0
         grad1 = self.perm[i + self.perm[j]] % 8
@@ -161,4 +163,4 @@ class PerlinNoise:
         Cy = self.smoth_function(part_frac_y)
         Li1 = s + Cx * (t - s)
         Li2 = u + Cx * (v - u)
-        return (Li1 + Cy * (Li2 - Li1) + 1) * 0.5
+        return abs(Li1 + Cy * (Li2 - Li1))
