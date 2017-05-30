@@ -5,6 +5,7 @@ from pygame.locals import *
 from OpenGL.GL import *
 from OpenGL.GLU import *
 
+
 def colorize(value, keys):
     if value in keys:
         return keys[value]
@@ -45,6 +46,10 @@ def show(the_map):
                0.75: [0.5, 0.5, 0.5, 1],
                1   : [0.8, 0.8, 0.8, 1]}
 
+    # Colorize chaque point
+    print('Calcul des couleurs...')
+    colorMap = [[colorize(the_map.map[i][j], palette) for j in range(the_map.side)] for i in range(the_map.side)]
+
     # Crée la display list
     print('Génération du rendu...')
     index = glGenLists(1)
@@ -53,10 +58,9 @@ def show(the_map):
     glBegin(GL_TRIANGLES)
     for i in range(the_map.side-1):
         for j in range(the_map.side-1):
-            mean = (the_map.map[i][j]+the_map.map[i+1][j]+the_map.map[i][j+1]+the_map.map[i+1][j+1])/4
-            color = colorize(mean, palette)
-            glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,color)
-            glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,color)
+            glMaterialfv(GL_FRONT_AND_BACK,GL_SPECULAR,colorMap[i][j])
+            glMaterialfv(GL_FRONT_AND_BACK,GL_AMBIENT_AND_DIFFUSE,colorMap[i][j])
+            
             v1 = the_map.map[i][j] - the_map.map[i+1][j]     # on x
             v2 = the_map.map[i+1][j] - the_map.map[i+1][j+1] # on y
             n = v1**2 + v2**2 + 1
@@ -149,7 +153,7 @@ def show(the_map):
         glRotated(orient, 1, 0, 0)
         glRotated(angle, 0, 1, 0)
         
-        glLightiv(GL_LIGHT0,GL_POSITION,[2, 5, 2, 0])
+        glLightiv(GL_LIGHT0,GL_POSITION,[0, 5, 0, 0])
 
         glScalef(zoomFactor, zoomFactor, zoomFactor)
         glTranslatef(-1, 0, -1)
