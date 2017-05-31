@@ -83,7 +83,14 @@ class Fractal:
         return m
 
     @staticmethod
-    def noise(x, y, side):
+    def noise(x, y, coefs, noises):
+        res = 0
+        for k in range(len(noises)):
+            res += coefs[k] * noises[k].val(x, y)
+        return res
+
+    @staticmethod
+    def perlin_combined(side):
         noise1 = PerlinNoise(smoothness=side)
         permutation = noise1.permutation
         noise2 = PerlinNoise(smoothness=(side // 2), permutation=permutation)
@@ -92,17 +99,9 @@ class Fractal:
         noise5 = PerlinNoise(smoothness=5, permutation=permutation)
         noise6 = PerlinNoise(smoothness=side)
         noise7 = PerlinNoise(smoothness=side)
-        return (0.5 * noise1.val(x, y) +
-                # 0.02 * noise6.val(x, y) +
-                # 0.01 * noise7.val(x, y) +
-                # 0.25 * noise2.val(x, y) +
-                # 0.0125 * noise3.val(x, y) +
-                # 0.00625 * noise4.val(x, y) +
-                0 * noise5.val(x, y))
-
-    @staticmethod
-    def perlin_combined(side):
-        m = np.array([[Fractal.noise(i, j, side) for i in range(side)]
+        coefs = [0.5, 0.1, 0.075, 0.05, 0.025, 0.5, 0.5]
+        noises = [noise1, noise2, noise3, noise4, noise5, noise6, noise7]
+        m = np.array([[Fractal.noise(i, j, coefs, noises) for i in range(side)]
                       for j in range(side)])
         m -= m.min()
         m = m / m.max()
@@ -120,8 +119,11 @@ class PerlinNoise:
     :param permutation: if given uses this permutation
     """
 
-    def __init__(self, smoothness=1, size=256, permutation=None, seed=None):
+    def __init__(self, smoothness=1, size=256, permutation=None, seed=None, decalx=0, decaly=0):
         self.smoothness = smoothness
+        self.decalx = decalx
+        self.decaly = decaly
+        self.size = size
         if seed is not None:
             np.random.seed(seed)
         if permutation is None:
@@ -131,11 +133,11 @@ class PerlinNoise:
         # Pour avoir deux fois la permutation
         self.perm = np.concatenate((self.permutation, self.permutation))
         unit_bisector = sqrt(2) / 2
-        self.gradients = [(unit_bisector, unit_bisector),
+        self.gradients = [(1, 0), (0, 1), (-1, 0), (0, -1),
+                          (unit_bisector, unit_bisector),
                           (-unit_bisector, unit_bisector),
                           (unit_bisector, -unit_bisector),
-                          (-unit_bisector, -unit_bisector),
-                          (1, 0), (0, 1), (-1, 0), (0, -1)]
+                          (-unit_bisector, -unit_bisector)]
 
     @staticmethod
     def scalar(x, y):
@@ -146,7 +148,7 @@ class PerlinNoise:
         return 3 * x * x - 2 * x * x * x
 
     def val(self, x, y):
-        x, y = x / self.smoothness, y / self.smoothness
+        x, y = (x + self.decalx) % self.size / self.smoothness, (y + self.decaly) % self.size / self.smoothness
         x0, y0 = int(x), int(y)
         if(x == x0 and y == y0):
             x = x + 0.01

@@ -7,8 +7,7 @@ import matplotlib.pyplot as plt
 if __name__ == '__main__':
     m = Map(256)
     m.generate_map(method="perlin_combined")
-    # show(m)
+    show(m)
     # print(m.map)
     plt.imshow(m.map, cmap=plt.cm.binary)
     plt.show()
-
