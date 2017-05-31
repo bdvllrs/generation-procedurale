@@ -11,3 +11,4 @@ if __name__ == '__main__':
     # print(m.map)
     plt.imshow(m.map, cmap=plt.cm.binary)
     plt.show()
+
