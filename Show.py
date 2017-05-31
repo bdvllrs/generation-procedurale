@@ -1,5 +1,6 @@
 import pygame
 import random
+import math
 from pygame.locals import *
 
 from OpenGL.GL import *
@@ -24,7 +25,7 @@ def colorize(value, keys):
 def show(the_map):
     # Initialisation
     pygame.init()
-    pygame.display.set_mode((600,600), DOUBLEBUF | OPENGL)
+    pygame.display.set_mode((1366,728), DOUBLEBUF | OPENGL) #| pygame.FULLSCREEN)
 
     glEnable(GL_DEPTH_TEST)
     glEnable(GL_LIGHTING)
@@ -34,6 +35,7 @@ def show(the_map):
 
     glMatrixMode(GL_PROJECTION)
     gluPerspective(45, 1, 0.1, 50.0)
+    #glOrtho(-2,2,-2,2,0,8)
     
     glMatrixMode(GL_MODELVIEW)
     glMaterialf(GL_FRONT_AND_BACK,GL_SHININESS,10.0)
@@ -63,7 +65,7 @@ def show(the_map):
             
             v1 = the_map.map[i][j] - the_map.map[i+1][j]     # on x
             v2 = the_map.map[i+1][j] - the_map.map[i+1][j+1] # on y
-            n = v1**2 + v2**2 + 1
+            n = math.sqrt(v1**2 + v2**2 + 1)
             v1 /= n
             v2 /= n
             glNormal3f(-v1, 1/n, -v2)
@@ -73,7 +75,7 @@ def show(the_map):
             
             v1 = the_map.map[i][j+1] - the_map.map[i+1][j+1] # on x
             v2 = the_map.map[i][j] - the_map.map[i][j+1]     # on y
-            n = v1**2 + v2**2 + 1
+            n = math.sqrt(v1**2 + v2**2 + 1)
             v1 /= n
             v2 /= n
             glNormal3f(-v1, 1/n, -v2)
@@ -102,8 +104,10 @@ def show(the_map):
     LRSpeed = 0
     UDSpeed = 0
     autoRotate = True
-    zoomFactor = 1.
-    orient = 30.
+    zoomFactor = 1
+    orient = 40.
+    translateSpeed = [0, 0, 0]
+    translation = [0, 0, 0]
 
     # Boucle Principale
     running = True
@@ -112,50 +116,75 @@ def show(the_map):
             if event.type == pygame.QUIT:
                 running = False
             if event.type == pygame.KEYDOWN:
-                if event.key == pygame.K_LEFT:
+                if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN]:
                     autoRotate = False
+                elif event.unicode in 'zqsdae':
+                    autoRotate = False
+                    
+                if event.key == pygame.K_LEFT:
                     LRSpeed -= 1
                 elif event.key == pygame.K_RIGHT:
-                    autoRotate = False
                     LRSpeed += 1
                 elif event.key == pygame.K_UP:
-                    autoRotate = False
                     UDSpeed -= 1
                 elif event.key == pygame.K_DOWN:
-                    autoRotate = False
                     UDSpeed += 1
                 elif event.key == pygame.K_RETURN:
                     if UDSpeed == 0 and LRSpeed == 0:
                         autoRotate = not autoRotate
-                elif event.unicode == '+':
+                elif event.key == pygame.K_ESCAPE:
+                    running = False
+                elif event.key == 270:
                     zoomFactor *= 1.1
-                elif event.unicode == '-':
+                elif event.key == 269:
                     zoomFactor /= 1.1
+                elif event.key == ord('z'):
+                    translateSpeed[1] += 1
+                elif event.key == ord('q'):
+                    translateSpeed[0] -= 1
+                elif event.key == ord('s'):
+                    translateSpeed[1] -= 1
+                elif event.key == ord('d'):
+                    translateSpeed[0] += 1
+                elif event.key == ord('a'):
+                    translateSpeed[2] -= 1
+                elif event.key == ord('e'):
+                    translateSpeed[2] += 1
             elif event.type == pygame.KEYUP:
-                if event.key == pygame.K_LEFT:
+                if event.key in [pygame.K_LEFT, pygame.K_RIGHT, pygame.K_UP, pygame.K_DOWN]:
                     autoRotate = False
+                if event.key == pygame.K_LEFT:
                     LRSpeed += 1
                 elif event.key == pygame.K_RIGHT:
-                    autoRotate = False
                     LRSpeed -= 1
                 elif event.key == pygame.K_UP:
-                    autoRotate = False
                     UDSpeed += 1
                 elif event.key == pygame.K_DOWN:
-                    autoRotate = False
                     UDSpeed -= 1
+                elif event.key == ord('z'):
+                    translateSpeed[1] -= 1
+                elif event.key == ord('q'):
+                    translateSpeed[0] += 1
+                elif event.key == ord('s'):
+                    translateSpeed[1] += 1
+                elif event.key == ord('d'):
+                    translateSpeed[0] -= 1
+                elif event.key == ord('a'):
+                    translateSpeed[2] += 1
+                elif event.key == ord('e'):
+                    translateSpeed[2] -= 1
             
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
         glClearColor(0, 0, 0, 0)
         
         glPushMatrix()
         glTranslatef(0.0,0.0, -5)
+        glTranslatef(translation[0], translation[1], translation[2])
         glRotated(orient, 1, 0, 0)
         glRotated(angle, 0, 1, 0)
         
-        glLightiv(GL_LIGHT0,GL_POSITION,[0, 5, 0, 0])
-
         glScalef(zoomFactor, zoomFactor, zoomFactor)
+        glLightiv(GL_LIGHT0,GL_POSITION,[0, 50, 0, 0])
         glTranslatef(-1, 0, -1)
         glScalef(2/the_map.side, 1, 2/the_map.side)
         glColor3f(0.1, 0.1, 0.1)
@@ -165,10 +194,14 @@ def show(the_map):
         
         pygame.display.flip()
         if autoRotate:
-            angle += .2
+            #angle += .2
+            pass
         else:
             angle += 0.5*LRSpeed
             orient += 0.2*UDSpeed
+            translation[0] += translateSpeed[0]*0.02
+            translation[1] += translateSpeed[1]*0.02
+            translation[2] += translateSpeed[2]*0.02
         pygame.time.wait(10)
     glDeleteLists(index, 1)
     pygame.quit()

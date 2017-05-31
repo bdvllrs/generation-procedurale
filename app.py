@@ -9,5 +9,5 @@ if __name__ == '__main__':
     m.generate_map(method="perlin_combined")
     show(m)
     # print(m.map)
-    plt.imshow(m.map, cmap=plt.cm.binary)
-    plt.show()
+    # plt.imshow(m.map, cmap=plt.cm.binary)
+    # plt.show()
