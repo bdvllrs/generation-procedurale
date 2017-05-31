@@ -83,19 +83,26 @@ class Fractal:
         return m
 
     @staticmethod
-    def perlin_combined(side):
+    def noise(x, y, side):
         noise1 = PerlinNoise(smoothness=side)
         permutation = noise1.permutation
         noise2 = PerlinNoise(smoothness=(side // 2), permutation=permutation)
-        noise3 = PerlinNoise(smoothness=5, permutation=permutation)
-        noise4 = PerlinNoise(smoothness=2, permutation=permutation)
-        noise5 = PerlinNoise(smoothness=1.1, permutation=permutation)
-        m = np.array([[0.5 * noise1.val(i, j) +
-                       0.5 * noise2.val(i, j) +
-                       0.125 * noise3.val(i, j) +
-                       0.0625 * noise4.val(i, j) +
-                       0.0013 * noise5.val(i, j)
-                       for i in range(side)]
+        noise3 = PerlinNoise(smoothness=50, permutation=permutation)
+        noise4 = PerlinNoise(smoothness=20, permutation=permutation)
+        noise5 = PerlinNoise(smoothness=5, permutation=permutation)
+        noise6 = PerlinNoise(smoothness=side)
+        noise7 = PerlinNoise(smoothness=side)
+        return (0.5 * noise1.val(x, y) +
+                # 0.02 * noise6.val(x, y) +
+                # 0.01 * noise7.val(x, y) +
+                # 0.25 * noise2.val(x, y) +
+                # 0.0125 * noise3.val(x, y) +
+                # 0.00625 * noise4.val(x, y) +
+                0 * noise5.val(x, y))
+
+    @staticmethod
+    def perlin_combined(side):
+        m = np.array([[Fractal.noise(i, j, side) for i in range(side)]
                       for j in range(side)])
         m -= m.min()
         m = m / m.max()
